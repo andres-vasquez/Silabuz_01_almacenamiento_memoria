@@ -27,21 +27,22 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String LOG = MainActivity.class.getSimpleName();
 
-
-    //Variables en pantalla
-    private EditText mTextoEditText;
-    private TextView mResultadosEditText;
+    //View variables
+    private EditText mTextEditText;
+    private TextView mResultsEditText;
     private Button mInternaButton;
     private Button mExternaButton;
 
 
-    //Variables del menu
+    //Menu variables
     private static final int ID_MENU_1= 1;
     private static final int ID_MENU_2 = 2;
     private static final int ID_MENU_3 = 3;
 
-    private static final int PERMISOS_ESCRITURA=100;
+    //Code for get the Callback in Runtime permisson check
+    private static final int WRITE_PERMISSIOMN_CODE =100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,35 +52,34 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        //Declaramos las variables
-        mTextoEditText =(EditText)findViewById(R.id.texto_edit_text);
-        mResultadosEditText =(TextView)findViewById(R.id.resultados_text_view);
+        //Init view variables
+        mTextEditText =(EditText)findViewById(R.id.texto_edit_text);
+        mResultsEditText =(TextView)findViewById(R.id.resultados_text_view);
         mInternaButton =(Button)findViewById(R.id.interno_button);
         mExternaButton =(Button)findViewById(R.id.externo_button);
 
         mInternaButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v)
             {
-                //obtenemos el mTextoEditText
-                String mostrar= mTextoEditText.getText().toString();
+                //Get editText value
+                String textValue= mTextEditText.getText().toString();
                 try
                 {
-                    //Definimos la variable fout, como un archivo que sólo se puede acceder desde la app
+                    //Create a file to save the text
                     OutputStreamWriter fout=
                             new OutputStreamWriter(
-                                    openFileOutput("prueba_curso_android.txt", Context.MODE_PRIVATE));
-                    //**** Mostrar como APPEND
+                                    openFileOutput("my_file.txt", Context.MODE_PRIVATE));
 
-                    //Guardamos lo que hemos incluido en el editText
-                    fout.write(mostrar);
+                    //Save the text into file
+                    fout.write(textValue);
                     fout.close();
-                    //Las notificaciones serán explicadas más adelante
-                    Toast.makeText(getApplicationContext(), "Texto guardado",Toast.LENGTH_SHORT).show();
+
+                    //Show messaage to user
+                    Toast.makeText(getApplicationContext(), "Text saved successfully",Toast.LENGTH_SHORT).show();
                 }
                 catch (Exception ex)
                 {
-                    //Si no logró guardar en memoria, mostrar un mensaje de error en el Log.
-                    Log.e("Ficheros", "Error al escribir fichero a memoria mInternaButton");
+                    Log.e(LOG, "Error saving the text into Internal Storage");
                 }
             }
         });
@@ -88,37 +88,37 @@ public class MainActivity extends AppCompatActivity {
         {
             public void onClick(View v) {
 
-                String estado = Environment.getExternalStorageState();
-                boolean lista=false;
+                String externalMemoryStatus = Environment.getExternalStorageState();
+                boolean isMemoryReady=false;
 
-                if (estado.equals(Environment.MEDIA_MOUNTED))
+                if (externalMemoryStatus.equals(Environment.MEDIA_MOUNTED))
                 {
-                    lista=true;
-                    Toast.makeText(getApplicationContext(), "Memoria externa lista!", Toast.LENGTH_SHORT).show();
+                    isMemoryReady=true;
+                    Toast.makeText(getApplicationContext(), "External Storage ready!", Toast.LENGTH_SHORT).show();
                 }
-                else if (estado.equals(Environment.MEDIA_MOUNTED_READ_ONLY))
+                else if (externalMemoryStatus.equals(Environment.MEDIA_MOUNTED_READ_ONLY))
                 {
-                    Toast.makeText(getApplicationContext(), "Memoria externa sin permisos de escritura", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "External Storage in Read Only Mode", Toast.LENGTH_SHORT).show();
                 }
                 else
                 {
-                    Toast.makeText(getApplicationContext(), "Memoria externa no disponible", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "External Storage unavailable", Toast.LENGTH_SHORT).show();
                 }
 
-                //Comprueba si la memora SD está lista con permisos de escritura.
-                if(lista)
+                if(isMemoryReady)
                 {
+                    //Start runtime permission check
                     if (ContextCompat.checkSelfPermission(MainActivity.this,
                             Manifest.permission.WRITE_EXTERNAL_STORAGE)
                             != PackageManager.PERMISSION_GRANTED) {
 
-                        //Solicitamos permiso de escritura en memoria externa al usuario
+                        //If App doesn't have the permission create the RUN TIME request
                         ActivityCompat.requestPermissions(MainActivity.this,
                                 new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                PERMISOS_ESCRITURA);
+                                WRITE_PERMISSIOMN_CODE);
                     } else {
-                        //Si ya tiene el permiso guardamos en memoria
-                        guardarEnMemoriaExterna();
+                        //If app already had the permission continue saving the data
+                        saveInExternalStorage();
                     }
                 }
             }
@@ -126,33 +126,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Guardamos en memoria externa despues de solicitar permiso al usuario
+     * Save the text in External Storage
      */
-    private void guardarEnMemoriaExterna(){
-        //Guardamos en mostrar lo que escribimos
-        String mostrar= mTextoEditText.getText().toString();
+    private void saveInExternalStorage(){
+        //Get the text value
+        String textValue= mTextEditText.getText().toString();
 
         try
         {
-            //Busca la ruta de la SD
-            File ruta_sd = Environment.getExternalStorageDirectory();
-            //Obtiene la dirección raiz de la SD
-            File f = new File(ruta_sd.getAbsolutePath(), "prueba_curso_sd.txt");
+            //Look for external storage directory
+            File external_path = Environment.getExternalStorageDirectory();
+            //Create a file
+            File f = new File(external_path.getAbsolutePath(), "my_file_external.txt");
 
-            //Define que el archivo que será modificado se encuentra en la variable f
+            //Open the file
             OutputStreamWriter fout =
                     new OutputStreamWriter(
                             new FileOutputStream(f));
 
-            //Guardamos lo que hemos escrito en el archivo.
-            fout.write(mostrar);
+            //Write the file
+            fout.write(textValue);
             fout.close();
-            Toast.makeText(getApplicationContext(), "Texto guardado", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Text saved successfully", Toast.LENGTH_SHORT).show();
         }
         catch (Exception ex)
         {
-            //Si no logró guardar en memoria SD, mostrar un mensaje de error en el Log.
-            Log.e("Ficheros", "Error al escribir fichero a tarjeta SD");
+            Log.e(LOG, "Error saving the text into External Storage");
         }
     }
 
@@ -175,77 +174,77 @@ public class MainActivity extends AppCompatActivity {
             case ID_MENU_1:
                 try
                 {
-                    //Abriremos el contenido guardado en la memoria Interna
+                    //Open the file from internal storage
                     BufferedReader archivo =
                             new BufferedReader(
                                     new InputStreamReader(
-                                            openFileInput("prueba_curso_android.txt")));
+                                            openFileInput("my_file.txt")));
 
-                    //Guardamos el contenido del archivo en mTextoEditText.
-                    String texto = archivo.readLine();
+                    //get the content into string
+                    String savedText = archivo.readLine();
                     archivo.close();
 
-                    //Mostramos el contenido en el TextView de la parte inferior llamados mResultadosEditText
-                    mResultadosEditText.setText(texto);
+                    //Show the text into results
+                    mResultsEditText.setText(savedText);
                 }
                 catch (Exception ex)
                 {
-                    Log.e("Ficheros", "Error al leer desde memoria mInternaButton");
+                    Log.e(LOG, "Error reading the text from Internal Storage");
                 }
                 return true;
             case ID_MENU_2:
                 try
                 {
-                    //Obtiene la ruta de la tarjeta SD
-                    File ruta_sd = Environment.getExternalStorageDirectory();
-                    //En la variable f llamamos al archivo creado
-                    File f = new File(ruta_sd.getAbsolutePath(), "prueba_curso_sd.txt");
+                    //Look for external storage directory
+                    File external_path = Environment.getExternalStorageDirectory();
+                    //Create a file
+                    File f = new File(external_path.getAbsolutePath(), "my_file_external.txt");
 
+                    //Open the file from external storage
                     BufferedReader fin =
                             new BufferedReader(
                                     new InputStreamReader(
                                             new FileInputStream(f)));
-                    //Guardamos el contenido en la variable Texto
+                    //get the content into string
                     String texto = fin.readLine();
                     fin.close();
 
-                    //Mostramos el contenido en el TextView de la parte inferior llamados mResultadosEditText
-                    mResultadosEditText.setText(texto);
+                    //Show the text into results
+                    mResultsEditText.setText(texto);
                 }
                 catch (Exception ex)
                 {
-                    Log.e("Ficheros", "Error al leer desde tarjeta SD");
+                    Log.e(LOG, "Error reading the text from External Storage");
                 }
                 return true;
 
             case ID_MENU_3:
                 try
                 {
-                    //Obtenemos la ruta desde Res/raw
+                    //Get the file from RAW
                     InputStream ruta =
                             getResources().openRawResource(R.raw.prueba_csv);
 
-                    //Lo almacenamos en el buffer de lectura
+                    //Open the file from raw
                     BufferedReader archivo =
                             new BufferedReader(new InputStreamReader(ruta));
 
-                    //Vaciamos mResultadosEditText
-                    mResultadosEditText.setText("");
+                    //Clear the results
+                    mResultsEditText.setText("");
 
-                    //Abrimos el archivo
-                    String texto="";
-                    while((texto=archivo.readLine())!=null)
+                    String texf="";
+                    while((texf=archivo.readLine())!=null)
                     {
-                        //Hacemos desaparecer las comas.
-                        String texto_sin_comas=texto.replace(",","  ");
-                        //Mostramos los mResultadosEditText
-                        mResultadosEditText.append(texto_sin_comas+"\n");
+                        //The file contains data in CSV format so, removing the commas.
+                        String textWithoutComma=texf.replace(",","  ");
+                        //Show the text into results
+                        mResultsEditText.append(textWithoutComma+"\n");
                     }
                     archivo.close();
                 }
                 catch (Exception ex)
                 {
-                    Log.e("Ficheros", "Error al leer fichero desde recurso raw");
+                    Log.e(LOG, "Error reading the text from RAW resource");
                 }
                 return true;
             default:
@@ -253,19 +252,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Get the RUN TIME permission check result
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case PERMISOS_ESCRITURA: {
-                //Si el permiso no fue concedido el array de grantResults estara vacio
+            //If the requestCode is the same of the request action
+            case WRITE_PERMISSIOMN_CODE: {
+                //If the permission is granted the grantResults array is not empty
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    //Una vez que el permiso fue concedido guaramos en memoria
-                    guardarEnMemoriaExterna();
+                    //Once permission granted continue saving the data
+                    saveInExternalStorage();
                 } else {
-                    Toast.makeText(getApplicationContext(),"Permiso denagado",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Permission denied",Toast.LENGTH_SHORT).show();
                 }
             }
         }

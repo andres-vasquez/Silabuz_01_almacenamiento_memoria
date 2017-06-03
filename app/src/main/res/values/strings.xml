@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">AlmacenamientoMemoria</string>
 
-    <string name="hint_texto">Ingrese algún texto</string>
-    <string name="donde_guardarlo">Donde desea guardarlo?</string>
-    <string name="almacenamiento_interno">Almacenamiento Interno</string>
-    <string name="almacenmaiento_externo">Almacenamiento Externo</string>
+    <string name="hint_texto">Insert text</string>
+    <string name="donde_guardarlo">Where do you want to save the text?</string>
+    <string name="almacenamiento_interno">Internal Storage</string>
+    <string name="almacenmaiento_externo">External Storage</string>
 
-    <string name="resultados">Aca se mostrarán los resultados</string>
+    <string name="resultados">Results here</string>
 </resources>
